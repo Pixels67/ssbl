@@ -1,2 +1,2 @@
-# logger
- 
+# Logger
+Simple stream-based logger.
