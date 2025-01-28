@@ -30,9 +30,17 @@ namespace Logger {
 
     inline LogLevel logLevel = LogLevel::ALL;
     inline bool showTimestamp = true;
+    inline bool useColor = false;
 
     std::string logLevelToString(LogLevel level);
     std::string getTimestamp();
+
+#if _WIN32
+    int getColor(LogLevel level);
+    void setWindowsColor(int color);
+#else
+    std::string getColor(LogLevel level);
+#endif
 
     class LoggerStream {
     public:
