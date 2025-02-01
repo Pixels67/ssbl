@@ -66,48 +66,62 @@ std::string Logger::getColor(const LogLevel level) {
 
 #endif
 
-Logger::LoggerStream::LoggerStream(const LogLevel level)
-: messageLogLevel(level) {
+Logger::LogStream::LogStream(const LogLevel level)
+: m_messageLogLevel(level) {
 }
 
-Logger::LoggerStream::~LoggerStream() {
-    if (!(static_cast<char>(logLevel) & static_cast<char>(messageLogLevel))) return;
+Logger::LogStream::LogStream(const LogLevel level, const std::string& fileName)
+: m_messageLogLevel(level) {
+    m_outFileStream = std::ofstream(fileName);
+}
+
+Logger::LogStream::~LogStream() {
+    if (!(static_cast<char>(logLevel) & static_cast<char>(m_messageLogLevel))) return;
 
     std::ostringstream message;
 
 #if _WIN32
-    if (useColor)
-        setWindowsColor(getColor(messageLogLevel));
+    if (useColor && !m_outFileStream.has_value())
+        setWindowsColor(getColor(m_messageLogLevel));
 #else
-    if (useColor)
-        message << getColor(messageLogLevel);
+    if (useColor && !m_outFileStream.has_value())
+        message << getColor(m_messageLogLevel);
 #endif
 
     if (showTimestamp)
         message << getTimestamp() << ' ';
 
-    message << logLevelToString(messageLogLevel) << ' ' << strStream.str() << std::endl;
+    message << logLevelToString(m_messageLogLevel) << ' ' << m_strStream.str() << std::endl;
 
 #if not _WIN32
-    if (useColor)
+    if (useColor && !m_outFileStream.has_value())
         message << "\033[0m";
 #endif
 
-    if (messageLogLevel == LogLevel::Fatal) {
+    if (m_outFileStream.has_value()) {
+        m_outFileStream.value() << message.str();
+    }
+    else if (m_messageLogLevel == LogLevel::Fatal) {
         std::cerr << message.str();
         std::exit(EXIT_FAILURE);
-    } else if (messageLogLevel == LogLevel::Error) {
+    }
+    else if (m_messageLogLevel == LogLevel::Error) {
         std::cerr << message.str();
-    } else {
+    }
+    else {
         std::cout << message.str();
     }
 
 #if _WIN32
-    if (useColor)
+    if (useColor && !m_outFileStream.has_value())
         setWindowsColor(0x0F);
 #endif
 }
 
-Logger::LoggerStream Logger::log(const LogLevel level) {
-    return LoggerStream(level);
+Logger::LogStream Logger::log(const LogLevel level) {
+    return LogStream(level);
+}
+
+Logger::LogStream Logger::logToFile(const LogLevel level, const std::string& fileName) {
+    return {level, fileName};
 }

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <fstream>
 #include <sstream>
+#include <optional>
 
 namespace Logger {
     enum class LogLevel {
@@ -42,23 +44,26 @@ namespace Logger {
     std::string getColor(LogLevel level);
 #endif
 
-    class LoggerStream {
+    class LogStream {
     public:
-        explicit LoggerStream(LogLevel level);
-        ~LoggerStream();
+        explicit LogStream(LogLevel level);
+        LogStream(LogLevel level, const std::string& fileName);
+        ~LogStream();
 
         template <typename T>
-        LoggerStream &operator<<(T &message) {
-            strStream << message;
+        LogStream &operator<<(T &message) {
+            m_strStream << message;
             return *this;
         }
 
     private:
-        std::ostringstream strStream;
-        LogLevel messageLogLevel;
+        std::optional<std::ofstream> m_outFileStream = std::nullopt;
+        std::ostringstream m_strStream;
+        LogLevel m_messageLogLevel;
     };
 
-    LoggerStream log(LogLevel level);
+    LogStream log(LogLevel level);
+    LogStream logToFile(LogLevel level, const std::string& fileName);
 } // namespace Logger
 
 using Logger::LogLevel;
