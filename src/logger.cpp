@@ -18,7 +18,7 @@ std::string Logger::logLevelToString(const LogLevel level) {
         case LogLevel::Info:    return "[INF]";
         default:
             log(LogLevel::Error) << "Invalid log level specified!";
-            return "\0";
+            return "[UNK]";
     }
 }
 
