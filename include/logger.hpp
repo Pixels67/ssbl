@@ -50,7 +50,8 @@ public:
     template<typename T>
     LogStream &operator<<(const T &message) {
         std::string str = m_strStream.str();
-        m_strStream.str(String::formatString(str, message));
+        m_strStream.str(String::formatString(str, message, m_insertCount));
+        m_insertCount++;
 
         return *this;
     }
@@ -59,6 +60,7 @@ private:
     std::optional<std::ofstream> m_outFileStream = std::nullopt;
     std::ostringstream m_strStream;
     LogLevel m_messageLogLevel;
+    int m_insertCount = 0;
 };
 
 LogStream log(LogLevel level);

@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 defaults:
   run:
@@ -19,7 +19,7 @@ jobs:
           - { name: Ubuntu Clang,  os: ubuntu-latest,  flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ }
           - { name: macOS Clang,   os: macos-latest,   flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ }
         config:
-          - { name: Debug, flags:   -DCMAKE_BUILD_TYPE=Debug }
+          - { name: Debug, flags: -DCMAKE_BUILD_TYPE=Debug }
           - { name: Release, flags: -DCMAKE_BUILD_TYPE=Release }
 
     steps:

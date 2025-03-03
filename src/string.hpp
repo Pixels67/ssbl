@@ -1,26 +1,37 @@
 #pragma once
 
+#include <optional>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace String {
 
-template <typename T>
-std::string to_string(const T &value) {
+template<typename T>
+std::string toString(const T &value) {
     std::ostringstream oss;
     oss << value;
     return oss.str();
 }
 
+std::optional<size_t> toInt(char character);
+
+bool hasPlaceholder(const std::string &string);
+
+std::vector<size_t> findAllPlaceholders(const std::string &string);
+
+std::string preprocessPlaceholders(const std::string &string);
+
+std::string replaceAllPlaceholders(
+    const std::string &string, const std::string &value, size_t placeholderNumber = 1);
+
 template<typename T>
-std::string formatString(const std::string &string, const T &value) {
-    if (string.find("{}") == std::string::npos) return string + to_string(value);
+std::string formatString(const std::string &string, const T &value, const int insertNumber) {
+    if (!hasPlaceholder(string))
+        return string + toString(value);
 
-    std::string out = string;
-
-    if (size_t pos = out.find("{}"); pos != std::string::npos) {
-        return out.replace(pos, 2, to_string(value));
-    }
+    std::string out = preprocessPlaceholders(string);
+    out = replaceAllPlaceholders(out, toString(value), insertNumber);
 
     return out;
 }

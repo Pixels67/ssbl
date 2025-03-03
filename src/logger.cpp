@@ -12,13 +12,17 @@
 
 std::string Logger::logLevelToString(const LogLevel level) {
     switch (level) {
-        case LogLevel::Fatal:   return "[FTL]";
-        case LogLevel::Error:   return "[ERR]";
-        case LogLevel::Warning: return "[WRN]";
-        case LogLevel::Info:    return "[INF]";
-        default:
-            log(LogLevel::Error) << "Invalid log level specified!";
-            return "[UNK]";
+    case LogLevel::Fatal:
+        return "[FTL]";
+    case LogLevel::Error:
+        return "[ERR]";
+    case LogLevel::Warning:
+        return "[WRN]";
+    case LogLevel::Info:
+        return "[INF]";
+    default:
+        log(LogLevel::Error) << "Invalid log level specified!";
+        return "[UNK]";
     }
 }
 
@@ -36,13 +40,17 @@ std::string Logger::getTimestamp() {
 
 int Logger::getColor(const LogLevel level) {
     switch (level) {
-        case LogLevel::Fatal:   return 0x0C;  // Red
-        case LogLevel::Error:   return 0x0C;  // Red
-        case LogLevel::Warning: return 0x0E;  // Yellow
-        case LogLevel::Info:    return 0x09;  // Blue
-        default:
-            log(LogLevel::Error) << "Invalid log level specified!";
-            return 0x0F;
+    case LogLevel::Fatal:
+        return 0x0C; // Red
+    case LogLevel::Error:
+        return 0x0C; // Red
+    case LogLevel::Warning:
+        return 0x0E; // Yellow
+    case LogLevel::Info:
+        return 0x09; // Blue
+    default:
+        log(LogLevel::Error) << "Invalid log level specified!";
+        return 0x0F;
     }
 }
 
@@ -54,29 +62,33 @@ void Logger::setWindowsColor(const int color) {
 
 std::string Logger::getColor(const LogLevel level) {
     switch (level) {
-        case LogLevel::Fatal:   return "\033[1;31m";  // Red
-        case LogLevel::Error:   return "\033[0;31m";  // Light red
-        case LogLevel::Warning: return "\033[0;33m";  // Yellow
-        case LogLevel::Info:    return "\033[0;34m";  // Blue
-        default:
-            log(LogLevel::Error) << "Invalid log level specified!";
-            return "\033[0m";
+    case LogLevel::Fatal:
+        return "\033[1;31m"; // Red
+    case LogLevel::Error:
+        return "\033[0;31m"; // Light red
+    case LogLevel::Warning:
+        return "\033[0;33m"; // Yellow
+    case LogLevel::Info:
+        return "\033[0;34m"; // Blue
+    default:
+        log(LogLevel::Error) << "Invalid log level specified!";
+        return "\033[0m";
     }
 }
 
 #endif
 
 Logger::LogStream::LogStream(const LogLevel level)
-: m_messageLogLevel(level) {
-}
+    : m_messageLogLevel(level) {}
 
-Logger::LogStream::LogStream(const LogLevel level, const std::string& fileName)
-: m_messageLogLevel(level) {
+Logger::LogStream::LogStream(const LogLevel level, const std::string &fileName)
+    : m_messageLogLevel(level) {
     m_outFileStream = std::ofstream(fileName);
 }
 
 Logger::LogStream::~LogStream() {
-    if (!(static_cast<char>(logLevel) & static_cast<char>(m_messageLogLevel))) return;
+    if (!(static_cast<char>(logLevel) & static_cast<char>(m_messageLogLevel)))
+        return;
 
     std::ostringstream message;
 
@@ -100,15 +112,12 @@ Logger::LogStream::~LogStream() {
 
     if (m_outFileStream.has_value()) {
         m_outFileStream.value() << message.str();
-    }
-    else if (m_messageLogLevel == LogLevel::Fatal) {
+    } else if (m_messageLogLevel == LogLevel::Fatal) {
         std::cerr << message.str();
         std::exit(EXIT_FAILURE);
-    }
-    else if (m_messageLogLevel == LogLevel::Error) {
+    } else if (m_messageLogLevel == LogLevel::Error) {
         std::cerr << message.str();
-    }
-    else {
+    } else {
         std::cout << message.str();
     }
 
@@ -122,6 +131,6 @@ Logger::LogStream Logger::log(const LogLevel level) {
     return LogStream(level);
 }
 
-Logger::LogStream Logger::logToFile(const LogLevel level, const std::string& fileName) {
+Logger::LogStream Logger::logToFile(const LogLevel level, const std::string &fileName) {
     return {level, fileName};
 }
