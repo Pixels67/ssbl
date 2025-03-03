@@ -26,7 +26,7 @@ std::string replaceAllPlaceholders(
     const std::string &string, const std::string &value, size_t placeholderNumber = 1);
 
 template<typename T>
-std::string formatString(const std::string &string, const T &value, const int insertNumber) {
+std::string formatString(const std::string &string, const T &value, const size_t insertNumber) {
     if (!hasPlaceholder(string))
         return string + toString(value);
 

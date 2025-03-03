@@ -45,13 +45,21 @@ std::string String::preprocessPlaceholders(const std::string &string) {
 }
 
 std::string String::replaceAllPlaceholders(
-    const std::string &string, const std::string &value, const size_t placeholderNumber) {
+    const std::string &string, const std::string &value, const size_t placeholderNumber
+) {
     std::string out = string;
+    size_t lengthDiff = toString(value).length() - 3;
+    size_t replaceCount = 0;
+
+    if (value == "World") {
+
+    }
 
     for (const auto &placeholder : findAllPlaceholders(out)) {
-        const auto number = toInt(out[placeholder + 1]);
-        if (number.has_value() && number == placeholderNumber) {
-            out.replace(placeholder, 3, toString(value));
+        if (const auto number = toInt(out[placeholder + replaceCount * lengthDiff + 1]);
+            number.has_value() && number == placeholderNumber) {
+            out.replace(placeholder + replaceCount * lengthDiff, 3, toString(value));
+            replaceCount++;
         }
     }
 

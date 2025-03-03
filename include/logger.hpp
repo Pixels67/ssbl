@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../src/string.hpp"
+#include "string.hpp"
 #include <fstream>
 #include <optional>
 #include <sstream>
@@ -60,7 +60,7 @@ private:
     std::optional<std::ofstream> m_outFileStream = std::nullopt;
     std::ostringstream m_strStream;
     LogLevel m_messageLogLevel;
-    int m_insertCount = 0;
+    size_t m_insertCount = 0;
 };
 
 LogStream log(LogLevel level);

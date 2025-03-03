@@ -15,7 +15,7 @@ int main() {
 
     // Formatted output
     log(LogLevel::Info) << "My name is {}, and I am {} years old." << "John" << 35;
-    log(LogLevel::Info) << "{1}, {2}!" << "World" << "Hello";
+    log(LogLevel::Info) << "{2}, {1}!" << "World" << "Hello";
 
     // Output to file
     logToFile(LogLevel::Info, "Example.log") << "Hello, Info!";
