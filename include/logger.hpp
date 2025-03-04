@@ -1,70 +1,60 @@
 #pragma once
 
-#include "string.hpp"
+#include "Format.hpp"
+#include "Log.hpp"
 #include <fstream>
-#include <optional>
+#include <iostream>
 #include <sstream>
 
-namespace Logger {
-enum class LogLevel {
-    None = 0,
-    Fatal = 1,
-    Error = 2,
-    Warning = 4,
-    Info = 8,
-    All = Fatal | Error | Warning | Info
-};
-
-constexpr LogLevel operator|(LogLevel a, LogLevel b) {
-    return static_cast<LogLevel>(static_cast<char>(a) | static_cast<char>(b));
-}
-
-constexpr LogLevel operator&(LogLevel a, LogLevel b) {
-    return static_cast<LogLevel>(static_cast<char>(a) & static_cast<char>(b));
-}
-
-constexpr LogLevel operator~(LogLevel level) {
-    return static_cast<LogLevel>(~static_cast<char>(level));
-}
-
-inline LogLevel logLevel = LogLevel::All;
-inline bool showTimestamp = true;
-inline bool useColor = false;
-
-std::string logLevelToString(LogLevel level);
-std::string getTimestamp();
-
-#if _WIN32
-int getColor(LogLevel level);
-void setWindowsColor(int color);
-#else
-std::string getColor(LogLevel level);
-#endif
-
-class LogStream {
+namespace SSBL {
+class Logger {
 public:
-    explicit LogStream(LogLevel level);
-    LogStream(LogLevel level, const std::string &fileName);
-    ~LogStream();
+    Logger &Log(Level level = Level::Info);
+    Logger &LogToFile(const std::string &filePath, Level level = Level::Info);
 
     template<typename T>
-    LogStream &operator<<(const T &message) {
-        std::string str = m_strStream.str();
-        m_strStream.str(String::formatString(str, message, m_insertCount));
-        m_insertCount++;
+    Logger &operator<<(const T &stream) {
+        if (!IsLevelIncluded(m_level))
+            return *this;
+
+        m_stream.str(Format(m_stream.str(), GenericToString(stream), insertCount));
+        insertCount++;
+
+        if (Contains(GenericToString(stream), "\n")) {
+            Send(m_stream.str());
+            Flush();
+        }
 
         return *this;
     }
 
+    void SetOutStream(std::ostream *messageOutStream, std::ostream *errorOutStream);
+    void SetConfig(const Config &config);
+    void SetLevelMask(Level level);
+    bool IsLevelIncluded(Level level) const;
+
 private:
-    std::optional<std::ofstream> m_outFileStream = std::nullopt;
-    std::ostringstream m_strStream;
-    LogLevel m_messageLogLevel;
-    size_t m_insertCount = 0;
+    std::ostream *m_msgOutStream = &std::cout;
+    std::ostream *m_errOutStream = &std::cerr;
+    std::optional<std::ofstream> m_fileOutStream;
+
+    std::ostringstream m_stream;
+    size_t insertCount = 0;
+
+    Config m_config = Config::Timestamp;
+    Level m_levelMask = Level::All;
+    Level m_level = Level::Info;
+
+    void Send(const std::string &string);
+    void Flush();
+
+    void SetColor();
+    void ResetColor() const;
+
+#if _WIN32
+    int GetColor() const;
+#else
+    std::string GetColor() const;
+#endif
 };
-
-LogStream log(LogLevel level);
-LogStream logToFile(LogLevel level, const std::string &fileName);
-} // namespace Logger
-
-using Logger::LogLevel;
+} // namespace SSBL
