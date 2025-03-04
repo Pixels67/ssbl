@@ -1,15 +1,18 @@
-# Logger
+# SSBL (Simple Stream-Based Logger)
 
-Simple stream-based logger.
+A very simple stream-based logger.\
+Supports logging to files, log levels (Info, Warning, Error and Fatal), timestamps and limited formatting
 
 ## Building from Source
 
-Make sure CMake is installed and run the following commands:
+Make sure you have a C++ compiler and CMake and run the following commands:
 
 ```sh
 cmake -B ./build -S ./
 cmake --build ./build
 ```
+
+***Note:*** only Clang is supported though any other compiler *should* work.
 
 ## Example
 
