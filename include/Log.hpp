@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Time.hpp"
 #include <string>
 
 namespace SSBL {
@@ -43,6 +44,6 @@ constexpr Config operator~(Config level) {
     return static_cast<Config>(~static_cast<char>(level));
 }
 
-std::string ToLog(const std::string &string, Level level, Config config);
+std::string ToLog(const std::string &string, Level level, Config config, const std::string &timestampFormat = DEFAULT_FORMAT);
 std::string LogLevelToString(Level level);
 } // namespace SSBL

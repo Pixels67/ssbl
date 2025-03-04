@@ -20,7 +20,12 @@ cmake --build ./build
 using namespace SSBL;
 
 Logger logger;
+
+// Configuration (color and timestamp)
 logger.SetConfig(Config::All);
+
+// Timestamp formatting
+logger.SetTimestampFormat("%h:%m:%s");
 
 // Log levels
 logger.Log()      << "Hello, Info!\n";

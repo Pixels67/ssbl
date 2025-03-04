@@ -5,11 +5,11 @@
 
 namespace SSBL {
 
-std::string ToLog(const std::string &string, const Level level, const Config config) {
+std::string ToLog(const std::string &string, const Level level, const Config config, const std::string &timestampFormat) {
     std::string log;
 
     if (static_cast<bool>(config & Config::Timestamp))
-        log += WithPadding(GetTimestamp());
+        log += WithPadding(Time::GetCurrentTime(timestampFormat));
 
     log += WithPadding(LogLevelToString(level));
     log += string;

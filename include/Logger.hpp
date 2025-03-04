@@ -35,6 +35,7 @@ public:
     void SetOutStream(std::ostream *messageOutStream, std::ostream *errorOutStream);
     void SetConfig(const Config &config);
     void SetLevelMask(Level level);
+    void SetTimestampFormat(const std::string &format);
     bool IsLevelIncluded(Level level) const;
 
 private:
@@ -48,6 +49,8 @@ private:
     Config m_config = Config::Timestamp;
     Level m_levelMask = Level::All;
     Level m_level = Level::Info;
+
+    std::string m_timestampFormat = DEFAULT_FORMAT;
 
     void Send(const std::string &string);
     void Flush();

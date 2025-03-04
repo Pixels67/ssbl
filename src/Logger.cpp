@@ -45,6 +45,10 @@ void Logger::SetLevelMask(const Level level) {
     m_levelMask = level;
 }
 
+void Logger::SetTimestampFormat(const std::string &format) {
+    m_timestampFormat = format;
+}
+
 bool Logger::IsLevelIncluded(const Level level) const {
     return (static_cast<int>(level) & static_cast<int>(m_levelMask)) != 0;
 }
@@ -62,14 +66,14 @@ void Logger::Send(const std::string &string) {
 
     switch (m_level) {
     case Level::Fatal:
-        *m_errOutStream << ToLog(string, m_level, m_config);
+        *m_errOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
         std::exit(EXIT_FAILURE);
         break;
     case Level::Error:
-        *m_errOutStream << ToLog(string, m_level, m_config);
+        *m_errOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
         break;
     default:
-        *m_msgOutStream << ToLog(string, m_level, m_config);
+        *m_msgOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
         break;
     }
 }
