@@ -11,9 +11,21 @@
 namespace SSBL {
 
 Logger &Logger::Log(const Level level) {
-  m_level = level;
-  return *this;
+    m_level = level;
+    return *this;
 }
+Logger &Logger::LogWarn() {
+    return Log(Level::Warning);
+}
+
+Logger &Logger::LogError() {
+    return Log(Level::Error);
+}
+
+Logger &Logger::LogFatal() {
+    return Log(Level::Fatal);
+}
+
 Logger &Logger::LogToFile(const std::string &filePath, Level level) {
     m_level = level;
     m_fileOutStream = std::ofstream(filePath);
@@ -74,7 +86,8 @@ void Logger::SetColor() {
 #if _WIN32
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), GetColor());
 #else
-    *m_msgOutStream << GetColor();
+        *m_errOutStream << GetColor();
+        *m_msgOutStream << GetColor();
 #endif
 }
 
@@ -83,6 +96,7 @@ void Logger::ResetColor() const {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
 #else
     *m_msgOutStream << "\033[0m";
+    *m_errOutStream << "\033[0m";
 #endif
 }
 

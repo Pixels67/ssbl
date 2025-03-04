@@ -10,6 +10,10 @@ namespace SSBL {
 class Logger {
 public:
     Logger &Log(Level level = Level::Info);
+    Logger &LogWarn();
+    Logger &LogError();
+    Logger &LogFatal();
+
     Logger &LogToFile(const std::string &filePath, Level level = Level::Info);
 
     template<typename T>
