@@ -8,17 +8,33 @@ include_directories(src include)
 
 add_library(
     logger STATIC
-    src/logger.cpp
-    include/logger.hpp
-    src/string.hpp
-    src/string.cpp
+    src/Logger.cpp
+    include/Logger.hpp
+    include/Time.hpp
+    src/Time.cpp
+    include/Format.hpp
+    src/Format.cpp
+    include/Log.hpp
+    src/Log.cpp
+    include/Convert.hpp
+    src/Convert.cpp
+    include/StringOps.hpp
+    src/StringOps.cpp
 )
 
 add_executable(
     example
-    src/logger.cpp
-    include/logger.hpp
+    src/Logger.cpp
+    include/Logger.hpp
     src/example/example.cpp
-    src/string.hpp
-    src/string.cpp
+    include/Time.hpp
+    src/Time.cpp
+    include/Format.hpp
+    src/Format.cpp
+    include/Log.hpp
+    src/Log.cpp
+    include/Convert.hpp
+    src/Convert.cpp
+    include/StringOps.hpp
+    src/StringOps.cpp
 )
