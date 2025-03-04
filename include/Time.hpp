@@ -4,7 +4,7 @@
 
 namespace SSBL {
 
-constexpr std::string DEFAULT_FORMAT = "%Y %M %D %h:%m:%s";
+constexpr const char *DEFAULT_FORMAT = "%Y %M %D %h:%m:%s";
 
 struct Time {
     size_t year;
