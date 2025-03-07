@@ -13,15 +13,15 @@ enum class LogLevel {
     WRN = 0b0010,
     ERR = 0b0100,
     FTL = 0b1000,
-    ALL = 0b1111,
+    ALL = 0b1111
 };
 
 String LogLevelToString(LogLevel level);
 Color LogLevelToColor(LogLevel level);
 
 struct LoggerSettings {
-    bool useColor          = false;
-    bool showTimestamp     = true;
+    bool useColor = false;
+    bool showTimestamp = true;
     String timeFormat = "%y-%m-%d %D %H:%M:%S";
 };
 
@@ -38,11 +38,13 @@ private:
     Logger &m_logger;
 };
 
-class Logger {
+class Logger final : std::streambuf {
 public:
-    explicit Logger(const LoggerSettings &settings = LoggerSettings(), const String &outputFile = String::Empty());
+    explicit Logger(
+        const LoggerSettings &settings = LoggerSettings(),
+        const String &outputFile = String::Empty());
     explicit Logger(const String &outputFile);
-    ~Logger();
+    ~Logger() override;
 
     LoggerStream Log(LogLevel level = LogLevel::INF);
 
@@ -58,10 +60,17 @@ public:
     void operator<<(const String &string);
     void Flush();
 
+protected:
+    int overflow(int character) override;
+
+    std::streamsize xsputn(const char* s, std::streamsize n) override;
+
 private:
     void ProcessStream();
 
     LoggerSettings m_settings;
+    std::streambuf *m_cout;
+    std::streambuf *m_cerr;
     String m_stream;
     LogLevel m_currentLevel = LogLevel::INF;
     size_t m_insertCount = 0;

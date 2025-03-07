@@ -153,11 +153,27 @@ String &String::ReplaceAll(const String &query, const String &replace) {
 
 String &String::ReplaceAll(const char query, const char replace) {
     std::vector<size_t> occurrences = FindAll(query);
-    for (const auto &occurrence: occurrences) {
+    for (const auto &occurrence : occurrences) {
         m_string[occurrence] = replace;
     }
 
     return *this;
+}
+
+String &String::RemoveFirst(const String &query) {
+    return ReplaceFirst(query, "");
+}
+
+String &String::RemoveFirst(const char query) {
+    return ReplaceFirst(String(query), "");
+}
+
+String &String::RemoveAll(const String &query) {
+    return ReplaceAll(query, "");
+}
+
+String &String::RemoveAll(const char query) {
+    return ReplaceAll(String(query), "");
 }
 
 String &String::Prepend(const String &string) {

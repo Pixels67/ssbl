@@ -64,6 +64,12 @@ public:
     String &ReplaceAll(const String &query, const String &replace);
     String &ReplaceAll(char query, char replace);
 
+    String &RemoveFirst(const String &query);
+    String &RemoveFirst(char query);
+
+    String &RemoveAll(const String &query);
+    String &RemoveAll(char query);
+
     String operator+(const String &string) const;
     String operator+(char character) const;
 

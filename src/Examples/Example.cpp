@@ -1,4 +1,5 @@
 #include "Logger.hpp"
+#include <iostream>
 
 int main() {
     SSBL::Logger logger("Example.log");
@@ -10,6 +11,8 @@ int main() {
     logger.Log()      << "Info";
     logger.LogWarn()  << "Warning";
     logger.LogError() << "Error";
+
+    std::cout << "cout" << std::endl;
 
     logger.Log() << "My name is {} and I'm {} years old." << "John" << 35;
     logger.Log() << "{2}, {1}!" << "World" << "Hello";

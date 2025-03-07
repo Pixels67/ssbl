@@ -50,16 +50,26 @@ LoggerStream &LoggerStream::operator<<(const String &string) {
 }
 
 Logger::Logger(const LoggerSettings &settings, const String &outputFile)
-    : m_settings(settings) {
+    : m_settings(settings)
+    , m_cout(std::cout.rdbuf())
+    , m_cerr(std::cerr.rdbuf()) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
     }
+
+    std::cout.rdbuf(this);
+    std::cerr.rdbuf(this);
 }
 
-Logger::Logger(const String &outputFile) {
+Logger::Logger(const String &outputFile)
+    : m_cout(std::cout.rdbuf())
+    , m_cerr(std::cerr.rdbuf()) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
     }
+
+    std::cout.rdbuf(this);
+    std::cerr.rdbuf(this);
 }
 
 Logger::~Logger() {
@@ -107,12 +117,17 @@ Logger &Logger::SetOutputFile(const String &fileName) {
 void Logger::operator<<(const String &string) {
     m_stream = Format(m_stream, string, m_insertCount);
     m_insertCount++;
+
+    if (string.Contains('\n')) {
+        m_stream.RemoveFirst('\n');
+        Flush();
+    }
 }
 
 void Logger::Flush() {
-    std::ostream &outputStream = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
-                                     ? std::cerr
-                                     : std::cout;
+    std::ostream outputStream = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
+                                     ? std::ostream(m_cerr)
+                                     : std::ostream(m_cout);
 
     if (m_settings.useColor) {
         SetColor(LogLevelToColor(m_currentLevel), outputStream, m_currentLevel == LogLevel::FTL);
@@ -132,6 +147,26 @@ void Logger::Flush() {
 
     m_stream.Clear();
     m_insertCount = 0;
+}
+
+int Logger::overflow(const int character) {
+    if (character != EOF) {
+        const LogLevel previousLevel = m_currentLevel;
+        m_currentLevel = LogLevel::NON;
+        const char ch = static_cast<char>(character);
+        *this << String(ch);
+        m_currentLevel = previousLevel;
+    }
+
+    return character;
+}
+
+std::streamsize Logger::xsputn(const char *s, const std::streamsize n) {
+    const LogLevel previousLevel = m_currentLevel;
+    m_currentLevel = LogLevel::NON;
+    *this << String(s);
+    m_currentLevel = previousLevel;
+    return n;
 }
 
 void Logger::ProcessStream() {
