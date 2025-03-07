@@ -21,22 +21,20 @@ using namespace SSBL;
 
 Logger logger;
 
-// Configuration (color and timestamp)
-logger.SetConfig(Config::All);
-
-// Timestamp formatting
-logger.SetTimestampFormat("%h:%m:%s");
+// Configuration
+logger
+    .UseColor(true)
+    .ShowTimestamp(true)
+    .SetTimeFormat("%Y-%m-%d %H:%M:%S")
+    .SetOutputFile("Example.log");
 
 // Log levels
-logger.Log()      << "Hello, Info!\n";
-logger.LogWarn()  << "Hello, Warning!\n";
-logger.LogError() << "Hello, Error!\n";
-logger.LogFatal() << "Hello, Fatal!\n";
+logger.Log()      << "Hello, Info!";
+logger.LogWarn()  << "Hello, Warning!";
+logger.LogError() << "Hello, Error!";
+logger.LogFatal() << "Hello, Fatal!";
 
 // Formatted output
-logger.Log() << "My name is {}, and I am {} years old." << "John" << 35 << '\n';
-logger.Log() << "{2}, {1}!" << "World" << "Hello" << '\n';
-
-// File output
-logger.LogToFile("Example.log") << "Hello, File!\n";
+logger.Log() << "My name is {}, and I am {} years old." << "John" << 35;
+logger.Log() << "{2}, {1}!" << "World" << "Hello";
 ```

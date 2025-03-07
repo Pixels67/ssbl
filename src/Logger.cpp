@@ -1,141 +1,146 @@
 #include "Logger.hpp"
-#include "Log.hpp"
-#include <fstream>
 
-#if _WIN32
-
-#include <windows.h>
-
-#endif
+#include "Console.hpp"
+#include "Format.hpp"
+#include "String.hpp"
+#include "Time.hpp"
+#include <iostream>
 
 namespace SSBL {
-
-Logger &Logger::Log(const Level level) {
-    m_level = level;
-    return *this;
-}
-Logger &Logger::LogWarn() {
-    return Log(Level::Warning);
-}
-
-Logger &Logger::LogError() {
-    return Log(Level::Error);
-}
-
-Logger &Logger::LogFatal() {
-    return Log(Level::Fatal);
-}
-
-Logger &Logger::LogToFile(const std::string &filePath, Level level) {
-    m_level = level;
-    m_fileOutStream = std::ofstream(filePath);
-    return *this;
-}
-
-void Logger::SetOutStream(std::ostream *messageOutStream, std::ostream *errorOutStream) {
-    m_msgOutStream = messageOutStream;
-    m_errOutStream = errorOutStream;
-}
-
-void Logger::SetConfig(const Config &config) {
-    m_config = config;
-}
-
-void Logger::SetLevelMask(const Level level) {
-    m_levelMask = level;
-}
-
-void Logger::SetTimestampFormat(const std::string &format) {
-    m_timestampFormat = format;
-}
-
-bool Logger::IsLevelIncluded(const Level level) const {
-    return (static_cast<int>(level) & static_cast<int>(m_levelMask)) != 0;
-}
-
-void Logger::Send(const std::string &string) {
-    if (m_fileOutStream.has_value()) {
-        m_fileOutStream.value() << ToLog(string, m_level, m_config);
-        m_fileOutStream.value().close();
-        m_fileOutStream.reset();
-        return;
-    }
-
-    if (static_cast<bool>(m_config & Config::Color))
-        SetColor();
-
-    switch (m_level) {
-    case Level::Fatal:
-        *m_errOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
-        std::exit(EXIT_FAILURE);
-        break;
-    case Level::Error:
-        *m_errOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
-        break;
+String LogLevelToString(const LogLevel level) {
+    switch (level) {
+    case LogLevel::INF:
+        return "INF";
+    case LogLevel::WRN:
+        return "WRN";
+    case LogLevel::ERR:
+        return "ERR";
+    case LogLevel::FTL:
+        return "FTL";
     default:
-        *m_msgOutStream << ToLog(string, m_level, m_config, m_timestampFormat);
-        break;
+        return "UNK";
     }
+}
+
+Color LogLevelToColor(const LogLevel level) {
+    switch (level) {
+    case LogLevel::INF:
+        return Color::BLUE;
+    case LogLevel::WRN:
+        return Color::YELLOW;
+    case LogLevel::ERR:
+        return Color::RED;
+    case LogLevel::FTL:
+        return Color::RED;
+    default:
+        return Color::DEFAULT;
+    }
+}
+
+LoggerStream::LoggerStream(Logger &logger)
+    : m_logger(logger) {}
+
+LoggerStream::~LoggerStream() {
+    m_logger.Flush();
+}
+
+LoggerStream &LoggerStream::operator<<(const String &string) {
+    m_logger << string;
+    return *this;
+}
+
+Logger::Logger(const LoggerSettings &settings, const String &outputFile)
+    : m_settings(settings) {
+    if (!outputFile.IsEmpty()) {
+        m_file.open(outputFile.ToStdString());
+    }
+}
+
+Logger::Logger(const String &outputFile) {
+    if (!outputFile.IsEmpty()) {
+        m_file.open(outputFile.ToStdString());
+    }
+}
+
+Logger::~Logger() {
+    if (m_file.is_open()) {
+        m_file.close();
+    }
+}
+
+LoggerStream Logger::Log(const LogLevel level) {
+    m_currentLevel = level;
+    return LoggerStream(*this);
+}
+
+LoggerStream Logger::LogWarn() {
+    return Log(LogLevel::WRN);
+}
+
+LoggerStream Logger::LogError() {
+    return Log(LogLevel::ERR);
+}
+
+LoggerStream Logger::LogFatal() {
+    return Log(LogLevel::FTL);
+}
+Logger &Logger::UseColor(const bool useColor) {
+    m_settings.useColor = useColor;
+    return *this;
+}
+
+Logger &Logger::ShowTimestamp(const bool showTimestamp) {
+    m_settings.showTimestamp = showTimestamp;
+    return *this;
+}
+
+Logger &Logger::SetTimeFormat(const String &timeFormat) {
+    m_settings.timeFormat = timeFormat;
+    return *this;
+}
+
+Logger &Logger::SetOutputFile(const String &fileName) {
+    m_file.open(fileName.ToStdString());
+    return *this;
+}
+
+void Logger::operator<<(const String &string) {
+    m_stream = Format(m_stream, string, m_insertCount);
+    m_insertCount++;
 }
 
 void Logger::Flush() {
-    m_stream.str("");
-    insertCount = 0;
+    std::ostream &outputStream = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
+                                     ? std::cerr
+                                     : std::cout;
 
-    if (static_cast<bool>(m_config & Config::Color))
-        ResetColor();
+    if (m_settings.useColor) {
+        SetColor(LogLevelToColor(m_currentLevel), outputStream, m_currentLevel == LogLevel::FTL);
+    }
+
+    ProcessStream();
+    outputStream << m_stream << std::endl;
+
+    if (m_file.is_open()) {
+        m_file << m_stream << std::endl;
+    }
+
+    // Reset
+    if (m_settings.useColor) {
+        ResetColor(outputStream);
+    }
+
+    m_stream.Clear();
+    m_insertCount = 0;
 }
 
-void Logger::SetColor() {
-#if _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), GetColor());
-#else
-        *m_errOutStream << GetColor();
-        *m_msgOutStream << GetColor();
-#endif
-}
+void Logger::ProcessStream() {
+    const String LogLevel = LogLevelToString(m_currentLevel).Envelope("[", "] ");
+    const String Timestamp = GetTimestamp(m_settings.timeFormat).Envelope("[", "] ");
 
-void Logger::ResetColor() const {
-#if _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
-#else
-    *m_msgOutStream << "\033[0m";
-    *m_errOutStream << "\033[0m";
-#endif
-}
-
-#if _WIN32
-
-int Logger::GetColor() const {
-    switch (m_level) {
-    case Level::Fatal:
-        return 0x0C; // Red
-    case Level::Error:
-        return 0x0C; // Red
-    case Level::Warning:
-        return 0x0E; // Yellow
-    case Level::Info:
-        return 0x09; // Blue
-    default:
-        return 0x0F;
+    m_stream.Prepend(LogLevel);
+    if (m_settings.showTimestamp) {
+        m_stream.Prepend(Timestamp);
     }
 }
-#else
-
-std::string Logger::GetColor() const {
-    switch (m_level) {
-    case Level::Fatal:
-        return "\033[1;31m"; // Red
-    case Level::Error:
-        return "\033[0;31m"; // Light red
-    case Level::Warning:
-        return "\033[0;33m"; // Yellow
-    case Level::Info:
-        return "\033[0;34m"; // Blue
-    default:
-        return "\033[0m";
-    }
-}
-#endif
-
 } // namespace SSBL

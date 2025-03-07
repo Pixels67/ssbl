@@ -1,33 +1,35 @@
 #include "Format.hpp"
+
 #include "Convert.hpp"
-#include "Logger.hpp"
+#include <vector>
 
 namespace SSBL {
+String SSBL::IndexEmptyPlaceholders(const String &string) {
+    String indexed = string;
+    std::vector<size_t> placeholders = indexed.FindAll('{');
+    size_t index = 1;
 
-std::string WithPadding(const std::string &string) {
-    return '[' + string + "] ";
-}
+    for (const auto placeholder : placeholders) {
+        size_t actualIndex = placeholder + index;
 
-bool ContainsPlaceholder(const std::string &string) {
-    return Contains(string, "{") && Contains(string, "}");
-}
-
-std::string IndexPlaceholders(const std::string &string) {
-    std::string processedStr = string;
-    size_t pos = processedStr.find("{}", 0);
-    size_t placeholderNum = 0;
-
-    while (pos != std::string::npos) {
-        if (!CharToSize(processedStr[pos]).has_value()) {
-            processedStr
-                .replace(pos + placeholderNum, 2, '{' + GenericToString(placeholderNum + 1) + '}');
-            placeholderNum++;
+        if (!CharToSize(indexed[actualIndex]).has_value()) {
+            indexed.Insert(actualIndex, String(index)[0]);
+            index++;
         }
-
-        pos = string.find("{}", pos + 1);
     }
 
-    return processedStr;
+    return indexed;
 }
 
+String Format(const String &string, const String& insertString, const size_t index) {
+    const String placeholder = String(index).Envelope('{', '}');
+    String formatted = IndexEmptyPlaceholders(string);
+
+    if (!formatted.Contains(placeholder))
+        return string + insertString;
+
+    formatted.ReplaceAll(placeholder, insertString);
+
+    return formatted;
+}
 } // namespace SSBL

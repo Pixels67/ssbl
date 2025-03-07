@@ -8,19 +8,21 @@ include_directories(src include)
 
 set(
     LIBRARY_SOURCES
-    src/Logger.cpp
     include/Logger.hpp
+    src/Logger.cpp
+    include/String.hpp
+    src/String.cpp
+    include/Convert.hpp
+    src/Convert.cpp
     include/Time.hpp
     src/Time.cpp
     include/Format.hpp
     src/Format.cpp
-    include/Log.hpp
-    src/Log.cpp
-    include/Convert.hpp
-    src/Convert.cpp
-    include/StringOps.hpp
-    src/StringOps.cpp
+    include/Console.hpp
+    src/Console.cpp
 )
 
-add_library(logger STATIC ${LIBRARY_SOURCES})
-add_executable(example ${LIBRARY_SOURCES} src/example/example.cpp)
+add_library(ssbl STATIC ${LIBRARY_SOURCES})
+add_executable(example src/Examples/Example.cpp)
+
+target_link_libraries(example ssbl)

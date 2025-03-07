@@ -1,67 +1,70 @@
 #pragma once
 
-#include "Format.hpp"
-#include "Log.hpp"
+#include "Console.hpp"
+#include "String.hpp"
 #include <fstream>
-#include <iostream>
+#include <optional>
 #include <sstream>
 
 namespace SSBL {
-class Logger {
+enum class LogLevel {
+    NON = 0b0000,
+    INF = 0b0001,
+    WRN = 0b0010,
+    ERR = 0b0100,
+    FTL = 0b1000,
+    ALL = 0b1111,
+};
+
+String LogLevelToString(LogLevel level);
+Color LogLevelToColor(LogLevel level);
+
+struct LoggerSettings {
+    bool useColor          = false;
+    bool showTimestamp     = true;
+    String timeFormat = "%y-%m-%d %D %H:%M:%S";
+};
+
+class Logger;
+
+class LoggerStream {
 public:
-    Logger &Log(Level level = Level::Info);
-    Logger &LogWarn();
-    Logger &LogError();
-    Logger &LogFatal();
+    explicit LoggerStream(Logger &logger);
+    ~LoggerStream();
 
-    Logger &LogToFile(const std::string &filePath, Level level = Level::Info);
-
-    template<typename T>
-    Logger &operator<<(const T &stream) {
-        if (!IsLevelIncluded(m_level))
-            return *this;
-
-        m_stream.str(Format(m_stream.str(), GenericToString(stream), insertCount));
-        insertCount++;
-
-        if (Contains(GenericToString(stream), "\n")) {
-            Send(m_stream.str());
-            Flush();
-        }
-
-        return *this;
-    }
-
-    void SetOutStream(std::ostream *messageOutStream, std::ostream *errorOutStream);
-    void SetConfig(const Config &config);
-    void SetLevelMask(Level level);
-    void SetTimestampFormat(const std::string &format);
-    bool IsLevelIncluded(Level level) const;
+    LoggerStream &operator<<(const String &string);
 
 private:
-    std::ostream *m_msgOutStream = &std::cout;
-    std::ostream *m_errOutStream = &std::cerr;
-    std::optional<std::ofstream> m_fileOutStream;
+    Logger &m_logger;
+};
 
-    std::ostringstream m_stream;
-    size_t insertCount = 0;
+class Logger {
+public:
+    explicit Logger(const LoggerSettings &settings = LoggerSettings(), const String &outputFile = String::Empty());
+    explicit Logger(const String &outputFile);
+    ~Logger();
 
-    Config m_config = Config::Timestamp;
-    Level m_levelMask = Level::All;
-    Level m_level = Level::Info;
+    LoggerStream Log(LogLevel level = LogLevel::INF);
 
-    std::string m_timestampFormat = DEFAULT_FORMAT;
+    LoggerStream LogWarn();
+    LoggerStream LogError();
+    LoggerStream LogFatal();
 
-    void Send(const std::string &string);
+    Logger &UseColor(bool useColor);
+    Logger &ShowTimestamp(bool showTimestamp);
+    Logger &SetOutputFile(const String &fileName);
+    Logger &SetTimeFormat(const String &timeFormat);
+
+    void operator<<(const String &string);
     void Flush();
 
-    void SetColor();
-    void ResetColor() const;
+private:
+    void ProcessStream();
 
-#if _WIN32
-    int GetColor() const;
-#else
-    std::string GetColor() const;
-#endif
+    LoggerSettings m_settings;
+    String m_stream;
+    LogLevel m_currentLevel = LogLevel::INF;
+    size_t m_insertCount = 0;
+    std::ofstream m_file;
 };
 } // namespace SSBL
