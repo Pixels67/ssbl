@@ -22,7 +22,7 @@ String ColorToAnsiEscapeCode(const Color color, const bool bold) {
 
 void SetColor(Color color, std::ostream &output, const bool bold) {
 #if defined _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<int>(color));
 #else
     output << ColorToAnsiEscapeCode(color, bold);
 #endif
@@ -30,7 +30,7 @@ void SetColor(Color color, std::ostream &output, const bool bold) {
 
 void ResetColor(std::ostream &output) {
 #if defined _WIN32
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), Color::DEFAULT);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<int>(Color::DEFAULT));
 #else
     output << ColorToAnsiEscapeCode(Color::DEFAULT);
 #endif

@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <sstream>
+#include <vector>
 
 namespace SSBL {
 class String {
