@@ -4,7 +4,7 @@
 #include <ctime>
 
 namespace SSBL {
-String SSBL::GetTimestamp(const String &format) {
+String GetTimestamp(const String &format) {
     using std::chrono::system_clock;
     const auto currentTime = system_clock::to_time_t(system_clock::now());
     String currentTimeString = std::ctime(&currentTime);
