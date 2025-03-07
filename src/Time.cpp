@@ -1,5 +1,6 @@
 #include "Time.hpp"
 
+#include <chrono>
 #include <ctime>
 
 namespace SSBL {
