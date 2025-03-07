@@ -12,8 +12,6 @@ cmake -B ./build -S ./
 cmake --build ./build
 ```
 
-***Note:*** only Clang is supported though any other compiler *should* work.
-
 ## Example
 
 ```cpp
