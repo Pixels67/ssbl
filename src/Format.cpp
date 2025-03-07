@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace SSBL {
-String SSBL::IndexEmptyPlaceholders(const String &string) {
+String IndexEmptyPlaceholders(const String &string) {
     String indexed = string;
     std::vector<size_t> placeholders = indexed.FindAll('{');
     size_t index = 1;
