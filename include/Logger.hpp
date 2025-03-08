@@ -4,7 +4,6 @@
 #include "String.hpp"
 #include <fstream>
 #include <optional>
-#include <sstream>
 
 namespace SSBL {
 enum class LogLevel {
@@ -22,7 +21,7 @@ Color LogLevelToColor(LogLevel level);
 struct LoggerSettings {
     bool useColor = false;
     bool showTimestamp = true;
-    String timeFormat = "%y-%m-%d %D %H:%M:%S";
+    String timeFormat = "%Y-%m-%d %D %H:%M:%S";
 };
 
 class Logger;
@@ -56,24 +55,35 @@ public:
     Logger &ShowTimestamp(bool showTimestamp);
     Logger &SetOutputFile(const String &fileName);
     Logger &SetTimeFormat(const String &timeFormat);
+    Logger &EnableRotatingFiles(const String &format, size_t sizeLimitBytes);
+    Logger &DisableRotatingFiles();
 
     void operator<<(const String &string);
     void Flush();
 
 protected:
     int overflow(int character) override;
-
-    std::streamsize xsputn(const char* s, std::streamsize n) override;
+    std::streamsize xsputn(const char* string, std::streamsize size) override;
 
 private:
+    void UpdateRotatingFiles();
     void ProcessStream();
 
+    static std::optional<std::streambuf *> cout;
+    static std::optional<std::streambuf *> cerr;
+
     LoggerSettings m_settings;
-    std::streambuf *m_cout;
-    std::streambuf *m_cerr;
     String m_stream;
     LogLevel m_currentLevel = LogLevel::INF;
     size_t m_insertCount = 0;
+
     std::ofstream m_file;
+    String m_filename;
+
+    std::ofstream m_rotatingFile;
+    bool m_rotatingFiles = false;
+    size_t m_rotatingFileSize = 0;
+    String m_rotatingFileFormat;
+    size_t m_rotatingFileIndex = 0;
 };
 } // namespace SSBL

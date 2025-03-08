@@ -4,9 +4,14 @@
 #include "Format.hpp"
 #include "String.hpp"
 #include "Time.hpp"
+#include <filesystem>
 #include <iostream>
 
 namespace SSBL {
+
+std::optional<std::streambuf *> Logger::cout = std::nullopt;
+std::optional<std::streambuf *> Logger::cerr = std::nullopt;
+
 String LogLevelToString(const LogLevel level) {
     switch (level) {
     case LogLevel::INF:
@@ -50,22 +55,34 @@ LoggerStream &LoggerStream::operator<<(const String &string) {
 }
 
 Logger::Logger(const LoggerSettings &settings, const String &outputFile)
-    : m_settings(settings)
-    , m_cout(std::cout.rdbuf())
-    , m_cerr(std::cerr.rdbuf()) {
+    : m_settings(settings) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
+    }
+
+    if (!cout.has_value()) {
+        cout = std::make_optional<std::streambuf *>(std::cout.rdbuf());
+    }
+
+    if (!cerr.has_value()) {
+        cerr = std::make_optional<std::streambuf *>(std::cerr.rdbuf());
     }
 
     std::cout.rdbuf(this);
     std::cerr.rdbuf(this);
 }
 
-Logger::Logger(const String &outputFile)
-    : m_cout(std::cout.rdbuf())
-    , m_cerr(std::cerr.rdbuf()) {
+Logger::Logger(const String &outputFile) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
+    }
+
+    if (!cout.has_value()) {
+        cout = std::make_optional<std::streambuf *>(std::cout.rdbuf());
+    }
+
+    if (!cerr.has_value()) {
+        cerr = std::make_optional<std::streambuf *>(std::cerr.rdbuf());
     }
 
     std::cout.rdbuf(this);
@@ -94,6 +111,7 @@ LoggerStream Logger::LogError() {
 LoggerStream Logger::LogFatal() {
     return Log(LogLevel::FTL);
 }
+
 Logger &Logger::UseColor(const bool useColor) {
     m_settings.useColor = useColor;
     return *this;
@@ -106,6 +124,18 @@ Logger &Logger::ShowTimestamp(const bool showTimestamp) {
 
 Logger &Logger::SetTimeFormat(const String &timeFormat) {
     m_settings.timeFormat = timeFormat;
+    return *this;
+}
+
+Logger &Logger::EnableRotatingFiles(const String &format, size_t sizeLimitBytes) {
+    m_rotatingFiles = true;
+    m_rotatingFileFormat = format;
+    m_rotatingFileSize = sizeLimitBytes;
+    return *this;
+}
+
+Logger &Logger::DisableRotatingFiles() {
+    m_rotatingFiles = false;
     return *this;
 }
 
@@ -126,8 +156,8 @@ void Logger::operator<<(const String &string) {
 
 void Logger::Flush() {
     std::ostream outputStream = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
-                                     ? std::ostream(m_cerr)
-                                     : std::ostream(m_cout);
+                                    ? std::ostream(cerr.value())
+                                    : std::ostream(cout.value());
 
     if (m_settings.useColor) {
         SetColor(LogLevelToColor(m_currentLevel), outputStream, m_currentLevel == LogLevel::FTL);
@@ -140,6 +170,11 @@ void Logger::Flush() {
         m_file << m_stream << std::endl;
     }
 
+    if (m_rotatingFiles) {
+        UpdateRotatingFiles();
+        m_rotatingFile << m_stream << std::endl;
+    }
+
     // Reset
     if (m_settings.useColor) {
         ResetColor(outputStream);
@@ -147,6 +182,10 @@ void Logger::Flush() {
 
     m_stream.Clear();
     m_insertCount = 0;
+
+    if (m_currentLevel == LogLevel::FTL) {
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int Logger::overflow(const int character) {
@@ -161,12 +200,31 @@ int Logger::overflow(const int character) {
     return character;
 }
 
-std::streamsize Logger::xsputn(const char *s, const std::streamsize n) {
+std::streamsize Logger::xsputn(const char *string, const std::streamsize size) {
     const LogLevel previousLevel = m_currentLevel;
     m_currentLevel = LogLevel::NON;
-    *this << String(s);
+    *this << String(string);
     m_currentLevel = previousLevel;
-    return n;
+    return size;
+}
+
+void Logger::UpdateRotatingFiles() {
+    const String filename = GetTimestamp(m_rotatingFileFormat)
+        .ReplaceAll("%x", m_rotatingFileIndex)
+        .Append(".log");
+
+    if (!m_rotatingFile.is_open()) {
+        m_filename = filename;
+        m_rotatingFile.open(filename.ToStdString());
+        m_rotatingFileIndex++;
+    }
+
+    if (std::filesystem::file_size(m_filename.ToStdString()) > m_rotatingFileSize) {
+        m_rotatingFile.close();
+        m_filename = filename;
+        m_rotatingFile.open(m_filename.ToStdString());
+        m_rotatingFileIndex++;
+    }
 }
 
 void Logger::ProcessStream() {
