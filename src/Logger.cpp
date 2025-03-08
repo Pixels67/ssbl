@@ -55,7 +55,9 @@ LoggerStream &LoggerStream::operator<<(const String &string) {
 }
 
 Logger::Logger(LoggerSettings settings, const String &outputFile)
-    : m_settings(std::move(settings)) {
+    : m_outputStream(*this)
+    , m_errorStream(*this)
+    , m_settings(std::move(settings)) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
     }
@@ -68,11 +70,13 @@ Logger::Logger(LoggerSettings settings, const String &outputFile)
         cerr = std::make_optional<std::streambuf *>(std::cerr.rdbuf());
     }
 
-    std::cout.rdbuf(this);
-    std::cerr.rdbuf(this);
+    std::cout.rdbuf(&m_outputStream);
+    std::cerr.rdbuf(&m_errorStream);
 }
 
-Logger::Logger(const String &outputFile) {
+Logger::Logger(const String &outputFile)
+    : m_outputStream(*this)
+    , m_errorStream(*this) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
     }
@@ -85,8 +89,8 @@ Logger::Logger(const String &outputFile) {
         cerr = std::make_optional<std::streambuf *>(std::cerr.rdbuf());
     }
 
-    std::cout.rdbuf(this);
-    std::cerr.rdbuf(this);
+    std::cout.rdbuf(&m_outputStream);
+    std::cerr.rdbuf(&m_errorStream);
 }
 
 Logger::~Logger() {
@@ -145,7 +149,7 @@ Logger &Logger::SetOutputFile(const String &fileName) {
 }
 
 void Logger::operator<<(const String &string) {
-    m_stream = Format(m_stream, string, m_insertCount);
+    m_stream = Format(m_stream, string.ToCString(), m_insertCount);
     m_insertCount++;
 
     if (string.Contains('\n')) {
@@ -155,9 +159,10 @@ void Logger::operator<<(const String &string) {
 }
 
 void Logger::Flush() {
-    std::streambuf *outputBuffer = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
-                                    ? cerr.value()
-                                    : cout.value();
+    std::streambuf *outputBuffer = m_currentLevel == LogLevel::FTL
+                                           || m_currentLevel == LogLevel::ERR
+                                       ? cerr.value()
+                                       : cout.value();
     std::ostream outputStream(outputBuffer);
 
     if (m_settings.useColor) {
@@ -189,30 +194,9 @@ void Logger::Flush() {
     }
 }
 
-int Logger::overflow(const int character) {
-    if (character != EOF) {
-        const LogLevel previousLevel = m_currentLevel;
-        m_currentLevel = LogLevel::NON;
-        const char ch = static_cast<char>(character);
-        *this << String(ch);
-        m_currentLevel = previousLevel;
-    }
-
-    return character;
-}
-
-std::streamsize Logger::xsputn(const char *string, const std::streamsize size) {
-    const LogLevel previousLevel = m_currentLevel;
-    m_currentLevel = LogLevel::NON;
-    *this << String(string);
-    m_currentLevel = previousLevel;
-    return size;
-}
-
 void Logger::UpdateRotatingFiles() {
-    const String filename = GetTimestamp(m_rotatingFileFormat)
-        .ReplaceAll("%x", m_rotatingFileIndex)
-        .Append(".log");
+    const String filename
+        = GetTimestamp(m_rotatingFileFormat).ReplaceAll("%x", m_rotatingFileIndex).Append(".log");
 
     if (!m_rotatingFile.is_open()) {
         m_filename = filename;
@@ -236,5 +220,42 @@ void Logger::ProcessStream() {
     if (m_settings.showTimestamp) {
         m_stream.Prepend(Timestamp);
     }
+}
+
+LogOutputStream::LogOutputStream(Logger &logger)
+    : m_logger(logger) {}
+
+int LogOutputStream::overflow(const int character) {
+    if (character != EOF && character != 10) {
+        const char ch = static_cast<char>(character);
+        String str(ch);
+        m_logger.Log() << String(ch);
+    }
+
+    return character;
+}
+
+std::streamsize LogOutputStream::xsputn(const char *string, const std::streamsize size) {
+    const std::string str(string, size);
+    m_logger.Log() << String(str).RemoveFirst('\n');
+    return size;
+}
+
+ErrorOutputStream::ErrorOutputStream(Logger &logger)
+    : m_logger(logger) {}
+
+int ErrorOutputStream::overflow(const int character) {
+    if (character != EOF) {
+        const char ch = static_cast<char>(character);
+        m_logger.LogError() << String(ch);
+    }
+
+    return character;
+}
+
+std::streamsize ErrorOutputStream::xsputn(const char *string, const std::streamsize size) {
+    const std::string str(string, size);
+    m_logger.LogError() << String(str).RemoveFirst('\n');
+    return size;
 }
 } // namespace SSBL

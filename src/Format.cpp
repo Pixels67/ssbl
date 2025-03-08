@@ -21,7 +21,9 @@ String IndexEmptyPlaceholders(const String &string) {
     return indexed;
 }
 
-String Format(const String &string, const String& insertString, const size_t index) {
+String Format(const String &string, const String &insertString, const size_t index) {
+    if (insertString.IsEmpty())
+        return string;
     const String placeholder = String(index).Envelope('{', '}');
     String formatted = IndexEmptyPlaceholders(string);
 

@@ -12,7 +12,8 @@ int main() {
     logger.LogWarn()  << "Warning";
     logger.LogError() << "Error";
 
-    std::cout << "cout" << std::endl;
+    std::cout << "cout";
+    std::cerr << "cerr";
 
     logger.Log() << "My name is {}, and I'm {} years old." << "John" << 35;
     logger.Log() << "My name is {2}, {1} {2}." << "James" << "Bond";

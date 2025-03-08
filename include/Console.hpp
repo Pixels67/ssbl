@@ -14,25 +14,15 @@ class Logger;
 
 #if defined _WIN32
 
-enum class Color {
-    DEFAULT = 15,
-    RED     = 12,
-    YELLOW  = 14,
-    BLUE    = 9
-};
+enum class Color { DEFAULT = 15, RED = 12, YELLOW = 14, BLUE = 9 };
 
 #else
 
-enum class Color {
-    DEFAULT = 0,
-    RED     = 31,
-    YELLOW  = 33,
-    BLUE    = 34
-};
+enum class Color { DEFAULT = 0, RED = 31, YELLOW = 33, BLUE = 34 };
 
 #endif
 
 String ColorToAnsiEscapeCode(Color color, bool bold = false);
 void SetColor(Color color, std::ostream &output, bool bold = false);
 void ResetColor(std::ostream &output);
-}
+} // namespace SSBL

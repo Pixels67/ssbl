@@ -123,7 +123,8 @@ String &String::Envelope(const char start, const char end) {
 
 String &String::ReplaceFirst(const String &query, const String &replace) {
     std::optional<size_t> firstOccurrence = FindFirst(query);
-    if (!firstOccurrence.has_value()) return *this;
+    if (!firstOccurrence.has_value())
+        return *this;
     m_string.replace(firstOccurrence.value(), query.GetLength(), replace.m_string);
     return *this;
 }
@@ -143,7 +144,7 @@ String &String::ReplaceAll(const String &query, const String &replace) {
     const int charDiff = static_cast<int>(replace.GetLength()) - query.GetLength();
     size_t replaceCount = 0;
 
-    for (const auto &occurrence: occurrences) {
+    for (const auto &occurrence : occurrences) {
         m_string.replace(occurrence + replaceCount * charDiff, query.GetLength(), replace.m_string);
         replaceCount++;
     }

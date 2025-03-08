@@ -37,13 +37,36 @@ private:
     Logger &m_logger;
 };
 
-class Logger final : std::streambuf {
+class LogOutputStream final : public std::streambuf {
+public:
+    explicit LogOutputStream(Logger &logger);
+
+protected:
+    int overflow(int character) override;
+    std::streamsize xsputn(const char *string, std::streamsize size) override;
+
+private:
+    Logger &m_logger;
+};
+
+class ErrorOutputStream final : public std::streambuf {
+public:
+    explicit ErrorOutputStream(Logger &logger);
+
+protected:
+    int overflow(int character) override;
+    std::streamsize xsputn(const char *string, std::streamsize size) override;
+
+private:
+    Logger &m_logger;
+};
+
+class Logger {
 public:
     explicit Logger(
-        LoggerSettings settings = LoggerSettings(),
-        const String &outputFile = String::Empty());
+        LoggerSettings settings = LoggerSettings(), const String &outputFile = String::Empty());
     explicit Logger(const String &outputFile);
-    ~Logger() override;
+    ~Logger();
 
     LoggerStream Log(LogLevel level = LogLevel::INF);
 
@@ -61,16 +84,15 @@ public:
     void operator<<(const String &string);
     void Flush();
 
-protected:
-    int overflow(int character) override;
-    std::streamsize xsputn(const char* string, std::streamsize size) override;
-
 private:
     void UpdateRotatingFiles();
     void ProcessStream();
 
     static std::optional<std::streambuf *> cout;
     static std::optional<std::streambuf *> cerr;
+
+    LogOutputStream m_outputStream;
+    ErrorOutputStream m_errorStream;
 
     LoggerSettings m_settings;
     String m_stream;
