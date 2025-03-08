@@ -54,8 +54,8 @@ LoggerStream &LoggerStream::operator<<(const String &string) {
     return *this;
 }
 
-Logger::Logger(const LoggerSettings &settings, const String &outputFile)
-    : m_settings(settings) {
+Logger::Logger(LoggerSettings settings, const String &outputFile)
+    : m_settings(std::move(settings)) {
     if (!outputFile.IsEmpty()) {
         m_file.open(outputFile.ToStdString());
     }
@@ -127,7 +127,7 @@ Logger &Logger::SetTimeFormat(const String &timeFormat) {
     return *this;
 }
 
-Logger &Logger::EnableRotatingFiles(const String &format, size_t sizeLimitBytes) {
+Logger &Logger::EnableRotatingFiles(const String &format, const size_t sizeLimitBytes) {
     m_rotatingFiles = true;
     m_rotatingFileFormat = format;
     m_rotatingFileSize = sizeLimitBytes;
@@ -155,9 +155,10 @@ void Logger::operator<<(const String &string) {
 }
 
 void Logger::Flush() {
-    std::ostream outputStream = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
-                                    ? std::ostream(cerr.value())
-                                    : std::ostream(cout.value());
+    std::streambuf *outputBuffer = m_currentLevel == LogLevel::FTL || m_currentLevel == LogLevel::ERR
+                                    ? cerr.value()
+                                    : cout.value();
+    std::ostream outputStream(outputBuffer);
 
     if (m_settings.useColor) {
         SetColor(LogLevelToColor(m_currentLevel), outputStream, m_currentLevel == LogLevel::FTL);

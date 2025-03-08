@@ -40,7 +40,7 @@ private:
 class Logger final : std::streambuf {
 public:
     explicit Logger(
-        const LoggerSettings &settings = LoggerSettings(),
+        LoggerSettings settings = LoggerSettings(),
         const String &outputFile = String::Empty());
     explicit Logger(const String &outputFile);
     ~Logger() override;
