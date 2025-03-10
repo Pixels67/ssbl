@@ -2,19 +2,27 @@
 #include <iostream>
 
 int main() {
-    SSBL::Logger logger;
+    using namespace SSBL;
 
-    logger
-        .UseColor(true)
-        .EnableRotatingFiles("%x", 128);
+    // Initialization & Configuration
+    Logger::Init(FileSettings(FileSettings::RotatingFile, "%x.log", 64));
+    Logger::UseColor(true);
+    Logger::levelsVisible = ~LogLevel::INF;
 
-    logger.Log()      << "Info";
-    logger.LogWarn()  << "Warning";
-    logger.LogError() << "Error";
+    // Logging
+    Logger::LogInfo()  << "Hello, Info!";
+    Logger::LogWarn()  << "Hello, Warning!";
+    Logger::LogError() << "Hello, Error!";
+    Logger::LogFatal() << "Hello, Fatal!";
 
-    std::cout << "cout";
-    std::cerr << "cerr";
+    // cout and cerr redirection
+    std::cout << "cout\n";
+    std::cerr << "cerr\n";
 
-    logger.Log() << "My name is {}, and I'm {} years old." << "John" << 35;
-    logger.Log() << "My name is {2}, {1} {2}." << "James" << "Bond";
+    // Formatting
+    Logger::LogInfo() << "My name is {}, and I'm {} years old." << "John" << 35;
+    Logger::LogInfo() << "My name is {2}, {1} {2}." << "James" << "Bond";
+
+    // Deinitialization
+    Logger::Destroy();
 }
