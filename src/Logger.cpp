@@ -5,6 +5,7 @@
 #include "String.hpp"
 #include "Time.hpp"
 #include <cassert>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -51,6 +52,20 @@ Color LogLevelToColor(const LogLevel level) {
         return Color::DEFAULT;
     }
 }
+
+LoggerSettings::LoggerSettings(
+    const bool useColor, const bool showTimestamp, const String &timeFormat)
+    : useColor(useColor)
+    , showTimestamp(showTimestamp)
+    , timeFormat(timeFormat) {}
+
+FileSettings::FileSettings(
+    const FileOutputType fileOutputType,
+    const String &outputFilepath,
+    const size_t maxRotatingFileSize)
+    : fileOutputType(fileOutputType)
+    , outputFilepath(outputFilepath)
+    , maxRotatingFileSize(maxRotatingFileSize) {}
 
 size_t File::GetSize() const {
     return std::filesystem::file_size(filePath.ToStdString());
