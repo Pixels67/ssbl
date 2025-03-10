@@ -22,17 +22,19 @@ String LogLevelToString(LogLevel level);
 Color LogLevelToColor(LogLevel level);
 
 struct LoggerSettings {
+    explicit LoggerSettings(bool useColor = false, bool showTimestamp = false,
+        const String &timeFormat = String("%Y-%m-%d %D %H:%M:%S"));
+
     bool useColor = false;
     bool showTimestamp = true;
     String timeFormat = "%Y-%m-%d %D %H:%M:%S";
 };
 
 struct FileSettings {
-    enum FileOutputType {
-        None = 0,
-        SingleFile,
-        RotatingFile
-    };
+    enum FileOutputType { None = 0, SingleFile, RotatingFile };
+
+    explicit FileSettings(FileOutputType fileOutputType = SingleFile,
+        const String &outputFilepath = "Log.log", size_t maxRotatingFileSize = 0);
 
     FileOutputType fileOutputType = SingleFile;
     String outputFilepath = "Log.log";
