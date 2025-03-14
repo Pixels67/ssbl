@@ -12,27 +12,40 @@ cmake -B ./build -S ./
 cmake --build ./build
 ```
 
-## Example
+## Examples
+Basic functionality:
 
 ```cpp
 using namespace SSBL;
 
-Logger logger;
+// Pass custom settings, otherwise load default settings
+Logger::Init();
 
 // Configuration
-logger
-    .UseColor(true)
-    .ShowTimestamp(true)
-    .SetTimeFormat("%Y-%m-%d %H:%M:%S")
-    .SetOutputFile("Example.log");
+Logger::UseColor(true);
+Logger::levelsVisible = LogLevel::INF | LogLevel::ERR;
+Logger::ShowTimestamp(true);
+Logger::SetTimeFormat("%Y-%m-%d %D %H:%M:%S");
 
 // Log levels
-logger.Log()      << "Hello, Info!";
-logger.LogWarn()  << "Hello, Warning!";
-logger.LogError() << "Hello, Error!";
-logger.LogFatal() << "Hello, Fatal!";
+Logger::LogInfo()  << "Hello, Info!";
+Logger::LogWarn()  << "Hello, Warning!";
+Logger::LogError() << "Hello, Error!";
+Logger::LogFatal() << "Hello, Fatal!";
 
 // Formatted output
 logger.Log() << "My name is {}, and I am {} years old." << "John" << 35;
 logger.Log() << "{2}, {1}!" << "World" << "Hello";
+
+Logger::Destroy();
+```
+File output:
+```cpp
+using namespace SSBL;
+
+// Single file
+Logger::Init(FileSettings(FileSettings::SingleFile, "name.log"))
+
+// Rotating files with 64 bytes max size, %x is a unique index, time placeholders can be used
+Logger::Init(FileSettings(FileSettings::RotatingFile, "%x.log", 64));
 ```
