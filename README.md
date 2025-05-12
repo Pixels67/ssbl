@@ -34,8 +34,8 @@ Logger::LogError() << "Hello, Error!";
 Logger::LogFatal() << "Hello, Fatal!";
 
 // Formatted output
-logger.Log() << "My name is {}, and I am {} years old." << "John" << 35;
-logger.Log() << "{2}, {1}!" << "World" << "Hello";
+Logger::LogInfo() << "My name is {}, and I am {} years old." << "John" << 35;
+Logger::LogInfo() << "{2}, {1}!" << "World" << "Hello";
 
 Logger::Destroy();
 ```
